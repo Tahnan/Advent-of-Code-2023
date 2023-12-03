@@ -1,0 +1,3 @@
+# .txt covers both input data and login credentials
+*.txt
+*.pyc
