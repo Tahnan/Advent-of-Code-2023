@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import aoc_util
+
 TEST_CASE = """
 """.strip()
 
@@ -19,13 +21,10 @@ def part_two(data=TEST_CASE, debug=False):
 
 if __name__ == '__main__':
     import time
-    name = Path(__file__).name.replace('advent', 'input').replace('py', 'txt')
-    data_path = Path(__file__).with_name(name).absolute()
-    if data_path.exists():
-        with data_path.open() as f:
-            DATA = f.read()
-    else:
-        DATA = ''
+    day = Path(__file__).name[7:9]
+    input_file = aoc_util.get_input_file(day)
+    with input_file.open() as f:
+        DATA = f.read()
 
     print(time.ctime(), 'Start')
     print(time.ctime(), part_one())
