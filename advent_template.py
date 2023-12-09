@@ -27,7 +27,11 @@ if __name__ == '__main__':
         DATA = f.read()
 
     print(time.ctime(), 'Start')
-    print(time.ctime(), part_one())
-    print(time.ctime(), part_one(data=DATA))
-    print(time.ctime(), part_two())
-    print(time.ctime(), part_two(data=DATA))
+    for fn, kwargs in (
+        (part_one, {}),
+        (part_one, {'data': DATA}),
+        (part_two, {}),
+        (part_two, {'data': DATA}),
+    ):
+        result = fn(**kwargs)
+        print(time.ctime(), result)
