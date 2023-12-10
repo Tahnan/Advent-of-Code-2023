@@ -22,6 +22,11 @@ def part_one(data=TEST_CASE, debug=False):
     for line in parse_data(data):
         state = list(line)
         states = []
+        # Oh, right... "0" is an error.  That's why I ended up putting in the
+        # print(state), and saw an infinite loop of empty states, which led to
+        # the "state and" clause, because I didn't realize that my problem was
+        # I was supposed to be checking against "{0}".  Fixed that in part 2.
+        # Well, that's speed coding for you.
         while state and set(state) != 0:
             if debug:
                 print(state)
