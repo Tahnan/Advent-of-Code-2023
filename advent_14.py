@@ -1,4 +1,3 @@
-from enum import Enum
 from pathlib import Path
 
 import aoc_util
@@ -17,9 +16,17 @@ O.#..O.#.#
 """.strip()
 
 
+def parse_data(data):
+    return Grid.from_text(data)
+
+
 def tilt_grid(grid, direction, debug=False):
+    # I hope this is self-evident, because I'm not sure I have the energy to
+    # walk through it in a comment.
     grid = Grid(grid)
     dr, dc = direction
+
+    # Have *got* to find a way to do the "row or column, whichever" thing
     if dc == 0:
         rownums = range(grid.rows)
         if dr == 1:
@@ -29,16 +36,12 @@ def tilt_grid(grid, direction, debug=False):
                 contents = grid[(r, c)]
                 if contents != 'O':
                     continue
-                if debug:
-                    print(f'From {(r, c)} to ', end='')
                 grid[(r, c)] = '.'
                 new_r = r
                 while (0 <= new_r < grid.rows and
                        grid.get((new_r + dr, c)) == '.'):
                     new_r += dr
                 grid[(new_r, c)] = 'O'
-                if debug:
-                    print((new_r, c))
     else:
         colnums = range(grid.columns)
         if dc == 1:
@@ -57,36 +60,37 @@ def tilt_grid(grid, direction, debug=False):
     return grid
 
 
-def parse_data(data):
-    return Grid.from_text(data)
-
-
-def measure_weight_on_north(grid):
-    weight = 0
-    for (row, col), contents in grid.items():
-        if contents == 'O':
-            weight += grid.rows - row
-    return weight
-
-
-def part_one(data=TEST_CASE, debug=False):
-    grid = tilt_grid(parse_data(data), (-1, 0), debug=debug)
-    if debug:
-        print(grid.to_text())
-    return measure_weight_on_north(grid)
-
-
 def get_rock_positions(grid):
     return tuple(sorted(coord for coord, contents in grid.items()
                         if contents == 'O'))
 
 
+def measure_weight_on_north(rock_positions, grid_height):
+    weight = 0
+    for row, _ in rock_positions:
+        weight += grid_height - row
+    return weight
+
+
+def part_one(data=TEST_CASE, debug=False):
+    grid = tilt_grid(parse_data(data), (-1, 0))
+    if debug:
+        print(grid.to_text())
+    return measure_weight_on_north(get_rock_positions(grid), grid.rows)
+
+
 def part_two(data=TEST_CASE, debug=False):
-    cycles = 1000000000
     grid = parse_data(data)
-    seen_positions = {get_rock_positions(grid): -1}
-    for cycle_num in range(1, cycles):
-        # We're not really going through all of these
+    cycles = 1000000000
+    cycle_num = 0
+    seen_positions = {get_rock_positions(grid): cycle_num}
+    while True:
+        # There are a finite number of possible positions.  Even more to the
+        # point, there's a smaller number of finite positions where everything
+        # is as far north as it can go.  That number has *got* to be smaller
+        # than "one billion", so find the point where we're in a position we've
+        # seen before, and do the modular arithmetic.
+        cycle_num += 1
         for d in ((-1, 0), (0, -1), (1, 0), (0, 1)):
             grid = tilt_grid(grid, d)
         if debug:
@@ -100,10 +104,7 @@ def part_two(data=TEST_CASE, debug=False):
             final_point = (cycle_start + ((cycles - cycle_start) % cycle_length))
             final_positions, = [pos for pos, num in seen_positions.items()
                                 if num == final_point]
-            weight = 0
-            for row, _ in final_positions:
-                weight += grid.rows - row
-            return weight
+            return measure_weight_on_north(final_positions, grid.rows)
         seen_positions[positions] = cycle_num
 
 
@@ -116,7 +117,7 @@ if __name__ == '__main__':
 
     print(time.ctime(), 'Start')
     for fn, kwargs in (
-        (part_one, {}),
+        (part_one, {'debug': True}),
         (part_one, {'data': DATA}),
         (part_two, {'debug': True}),
         (part_two, {'data': DATA}),
