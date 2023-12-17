@@ -40,7 +40,7 @@ def part_one(data=TEST_CASE, debug=False):
     final_best = float('inf')
     goal = max(grid)
     # states are (r, c), (dr, dc), <# steps taken in this direction>, <heat>
-    states = [((0, 0), (1, 0), 0, 0), ((0, 0), (0, 1), 0, 0)]
+    states = [((0, 0), (1, 0), 1, 0, ((0, 0),)), ((0, 0), (0, 1), 1, 0, ((0, 0),))]
 
     steps = 0
     while states:
@@ -52,21 +52,23 @@ def part_one(data=TEST_CASE, debug=False):
         #     if steps > 10:
         #         debug = False
         new_states = []
-        for (r, c), (dr, dc), in_this_dir, heat in states:
+        for (r, c), (dr, dc), in_this_dir, heat, path in states:
             space = (r + dr, c + dc)
             if space not in grid:
                 continue
             heat += grid[space]
+            path += ((space, heat),)
             if space == goal:
                 final_best = min(final_best, heat)
                 if debug:
-                    print(final_best)
+                    print('>>', final_best)
+                    print(path)
                 continue
             for drdc, so_far in get_next_states(dr, dc, in_this_dir):
                 if best_so_far[(space, drdc, so_far)] <= heat:
                     continue
                 best_so_far[(space, drdc, so_far)] = heat
-                new_states.append((space, drdc, so_far, heat))
+                new_states.append((space, drdc, so_far, heat, path))
         states = new_states
     return final_best
 
