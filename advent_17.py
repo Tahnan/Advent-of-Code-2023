@@ -37,40 +37,32 @@ def part_one(data=TEST_CASE, debug=False):
     grid = parse_data(data)
 
     best_so_far = defaultdict(lambda: float('inf'))
-    final_best = float('inf')
     goal = max(grid)
-    # states are (r, c), (dr, dc), <# steps taken in this direction>, <heat>
-    states = [((0, 0), (1, 0), 1, 0, ((0, 0),)), ((0, 0), (0, 1), 1, 0, ((0, 0),))]
+    # states are (r, c), (dr, dc), <# steps taken in this direction>, <path>
+    states = [((0, 0), (1, 0), 1, ((0, 0),)), ((0, 0), (0, 1), 1, ((0, 0),))]
+    heat_map = defaultdict(list)
+    heat_map[0] = states
 
-    steps = 0
-    while states:
-        # if debug:
-        #     print('>>', final_best)
-        #     for state in states:
-        #         print('    ', state)
-        #     steps += 1
-        #     if steps > 10:
-        #         debug = False
-        new_states = []
-        for (r, c), (dr, dc), in_this_dir, heat, path in states:
+    current_heat = 0
+    while True:
+        while current_heat not in heat_map:
+            current_heat += 1
+        states = heat_map.pop(current_heat)
+        for (r, c), (dr, dc), in_this_dir, path in states:
             space = (r + dr, c + dc)
             if space not in grid:
                 continue
-            heat += grid[space]
-            path += ((space, heat),)
+            new_heat = current_heat + grid[space]
+            path += ((space, new_heat),)
             if space == goal:
-                final_best = min(final_best, heat)
                 if debug:
-                    print('>>', final_best)
                     print(path)
-                continue
+                return new_heat
             for drdc, so_far in get_next_states(dr, dc, in_this_dir):
-                if best_so_far[(space, drdc, so_far)] <= heat:
+                if best_so_far[(space, drdc, so_far)] <= new_heat:
                     continue
-                best_so_far[(space, drdc, so_far)] = heat
-                new_states.append((space, drdc, so_far, heat, path))
-        states = new_states
-    return final_best
+                best_so_far[(space, drdc, so_far)] = new_heat
+                heat_map[new_heat].append((space, drdc, so_far, path))
 
 
 def part_two(data=TEST_CASE, debug=False):
