@@ -26,8 +26,11 @@ def parse_data(data):
     return Grid({x: int(y) for x, y in grid.items()})
 
 
-def get_turns(dr, dc):
-    return [(dc, -dr), (-dc, dr)]
+def get_next_states(dr, dc, in_this_dir):
+    new_states = [((dc, -dr), 1), ((-dc, dr), 1)]
+    if in_this_dir < 3:
+        new_states.append(((dr, dc), in_this_dir + 1))
+    return new_states
 
 
 def part_one(data=TEST_CASE, debug=False):
@@ -49,29 +52,21 @@ def part_one(data=TEST_CASE, debug=False):
         #     if steps > 10:
         #         debug = False
         new_states = []
-        for (r, c), (dr, dc), in_this_dir, heat_so_far in states:
-            next_space = (r + dr, c + dc)
-            if next_space not in grid:
+        for (r, c), (dr, dc), in_this_dir, heat in states:
+            space = (r + dr, c + dc)
+            if space not in grid:
                 continue
-            new_heat = heat_so_far + grid[next_space]
-            if new_heat >= best_so_far[next_space]:
-                continue
-            best_so_far[next_space] = new_heat
-            if next_space == goal:
-                final_best = min(final_best, new_heat)
+            heat += grid[space]
+            if space == goal:
+                final_best = min(final_best, heat)
                 if debug:
                     print(final_best)
                 continue
-            potential_new_states = [(next_space, turn, 1, new_heat)
-                                    for turn in get_turns(dr, dc)]
-            if in_this_dir < 3:
-                potential_new_states.append(
-                    (next_space, (dr, dc), in_this_dir + 1, new_heat)
-                )
-            for x1, x2, x3, x4 in potential_new_states:
-                if x4 < best_so_far[x1, x2, x3]:
-                    best_so_far[x1, x2, x3] = x4
-                    new_states.append((x1, x2, x3, x4))
+            for drdc, so_far in get_next_states(dr, dc, in_this_dir):
+                if best_so_far[(space, drdc, so_far)] <= heat:
+                    continue
+                best_so_far[(space, drdc, so_far)] = heat
+                new_states.append((space, drdc, so_far, heat))
         states = new_states
     return final_best
 
